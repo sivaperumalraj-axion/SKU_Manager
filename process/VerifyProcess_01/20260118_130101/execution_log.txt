@@ -1,0 +1,14 @@
+[2026-01-18 13:01:01] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 13:01:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130101
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130101
+
+[2026-01-18 13:01:01] FILTERED WITH RETURN CODE: 0
+----------------------------------------
+[2026-01-18 13:01:01] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 13:01:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130101
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130101
+
+[2026-01-18 13:01:01] FILTERED WITH RETURN CODE: 0
+----------------------------------------

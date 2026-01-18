@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoScheduler Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <header>
+        <div class="logo">
+            <span>⚡</span> AutoScheduler Pro
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            System Online
+        </div>
+    </header>
+
+    <main>
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="nav-item active" data-target="view-scheduler">
+                <span class="icon">📅</span>
+                <span class="label">Scheduler</span>
+            </div>
+            <div class="nav-item" data-target="view-threads">
+                <span class="icon">🧩</span>
+                <span class="label">Threads</span>
+            </div>
+            <div class="nav-item" data-target="view-processes">
+                <span class="icon">⚙️</span>
+                <span class="label">Processes</span>
+            </div>
+            <div class="nav-item" data-target="view-history">
+                <span class="icon">📜</span>
+                <span class="label">History</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="content-area">
+
+            <!-- VIEW: Scheduler (Home) -->
+            <div id="view-scheduler" class="view active">
+                <div class="panel">
+                    <div class="panel-header">Upcoming Schedules</div>
+                    <div class="panel-body">
+                        <!-- Quick Add -->
+                        <div class="quick-action-bar">
+                            <select id="schedule-process-select" class="form-select">
+                                <option value="" disabled selected>Select Process to Schedule...</option>
+                            </select>
+                            <input type="datetime-local" id="schedule-time-input" class="form-input">
+                            <button id="btn-add-schedule" class="btn btn-primary">Schedule Process</button>
+                        </div>
+                        <hr>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Run Time</th>
+                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedules-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: Threads -->
+            <div id="view-threads" class="view hidden">
+                <div class="panel">
+                    <div class="panel-header">Thread Manager</div>
+                    <div class="panel-body">
+
+                        <!-- Create Thread Form -->
+                        <div class="form-box">
+                            <h4>Create New Thread</h4>
+                            <form id="form-create-thread">
+                                <div class="form-row">
+                                    <input type="text" name="name" placeholder="Thread Name (Unique)" class="form-input"
+                                        required>
+                                    <select name="type" class="form-select" required>
+                                        <option value="Scraping">Scraping Thread</option>
+                                        <option value="Others">Other Thread</option>
+                                    </select>
+                                </div>
+                                <div class="form-row">
+                                    <label class="file-label">
+                                        Scripts (.py, .exe)
+                                        <input type="file" name="script_file" required>
+                                    </label>
+                                    <label class="file-label">
+                                        Config/Input (.csv)
+                                        <input type="file" name="config_file">
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-success">Create Thread</button>
+                            </form>
+                        </div>
+
+                        <hr>
+                        <h4>Existing Threads</h4>
+                        <div id="threads-grid" class="cards-grid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: Processes -->
+            <div id="view-processes" class="view hidden">
+                <div class="panel">
+                    <div class="panel-header">Process Builder</div>
+                    <div class="panel-body">
+
+                        <!-- Builder Interface -->
+                        <div class="builder-container">
+                            <div class="builder-left">
+                                <h4>1. Available Threads</h4>
+                                <ul id="builder-source-list" class="draggable-list">
+                                    <!-- List of Threads to Drag/Click -->
+                                </ul>
+                            </div>
+                            <div class="builder-right">
+                                <h4>2. Process Sequence</h4>
+                                <input type="text" id="builder-process-name" placeholder="Process Name"
+                                    class="form-input" style="margin-bottom: 0.5rem;">
+                                <ul id="builder-target-list" class="draggable-list target-zone">
+                                    <!-- Dropped Items -->
+                                    <li class="placeholder">Add threads here...</li>
+                                </ul>
+                                <button id="btn-save-process" class="btn btn-primary"
+                                    style="margin-top: 1rem; width: 100%;">Save Process</button>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h4>Existing Processes</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Process Name</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="processes-list-body"></tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: History -->
+            <div id="view-history" class="view hidden">
+                <div class="panel">
+                    <div class="panel-header">Execution History</div>
+                    <div class="panel-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Process</th>
+                                    <th>Status</th>
+                                    <th>Log Location</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

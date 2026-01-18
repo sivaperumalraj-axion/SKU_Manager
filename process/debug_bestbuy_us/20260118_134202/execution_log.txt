@@ -1,0 +1,24 @@
+[2026-01-18 13:42:02] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\BestBuy_US_1\main.py
+[2026-01-18 13:42:02] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\debug_bestbuy_us\20260118_134202
+
+[0] Product: https://www.bestbuy.com/product/ninja-blendboss-tumbler-blender-with-26oz-travel-tumbler-cyberspace/JXJVXL2WKP
+Chrome opened product page. If any human-check appears, solve it now...
+Resolved SKU: 6650822
+SKU 6650822 -> totalPages = 0
+Saved: ./Bestbuy_Output\Bestbuy_DB301CCY_Ninja BlendBOSS_US.csv (0 rows)
+
+[1] Product: https://www.bestbuy.com/product/ninja-crispi-pro-6-in-1-countertop-glass-air-fryer-cyberspace/JXJVXLX243
+Chrome opened product page. If any human-check appears, solve it now...
+Resolved SKU: 6650389
+SKU 6650389 -> totalPages = 2
+  Fetching page 2/2
+Saved: ./Bestbuy_Output\Bestbuy_AS101CY_Ninja Crispi Pro 6-in-1 Glass Countertop Air Fryer_US.csv (29 rows)
+
+[2] Product: https://www.bestbuy.com/product/ninja-fireside360-outdoor-heater-fire-pit-black/JXJVXL28XC
+Chrome opened product page. If any human-check appears, solve it now...
+Resolved SKU: 6646424
+SKU 6646424 -> totalPages = 0
+Saved: ./Bestbuy_Output\Bestbuy_OF101BK_Ninja Fireside360 Fire Pit_US.csv (0 rows)
+
+[2026-01-18 13:42:42] FILTERED WITH RETURN CODE: 0
+----------------------------------------

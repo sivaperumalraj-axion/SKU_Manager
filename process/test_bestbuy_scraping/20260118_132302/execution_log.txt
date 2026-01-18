@@ -1,0 +1,9 @@
+[2026-01-18 13:23:02] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\BestBuy_US\input - Sheet1.csv
+[2026-01-18 13:23:02] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\test_bestbuy_scraping\20260118_132302
+  File "C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\BestBuy_US\input - Sheet1.csv", line 2
+    Bestbuy_CI201CGY_Ninja Power Duo Immersion Blender_CA,https://www.bestbuy.ca/en-ca/product/ninja-power-duo-1l-750-watt-immersion-blender-with-whisk-grey/19504896
+                                                                                                               ^
+SyntaxError: invalid decimal literal
+
+[2026-01-18 13:23:02] FILTERED WITH RETURN CODE: 1
+----------------------------------------

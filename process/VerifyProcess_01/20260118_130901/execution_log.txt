@@ -1,0 +1,26 @@
+[2026-01-18 13:09:01] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 13:09:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+-18 13:09:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+-18 13:09:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 13:09:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 13:09:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 13:09:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_130901
+------------
+
+[2026-01-18 13:09:01] FILTERED WITH RETURN CODE: 0
+----------------------------------------

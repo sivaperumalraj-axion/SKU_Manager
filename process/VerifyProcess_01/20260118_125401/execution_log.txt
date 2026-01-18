@@ -1,0 +1,26 @@
+[2026-01-18 12:54:01] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 12:54:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+-18 12:54:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+
+[2026-01-18 12:54:01] FILTERED WITH RETURN CODE: 0
+----------------------------------------
+
+[2026-01-18 12:54:01] FILTERED WITH RETURN CODE: 0
+----------------------------------------
+[2026-01-18 12:54:01] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
+[2026-01-18 12:54:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+-18 12:54:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+Hello from Verification Thread!
+CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_125401
+
+[2026-01-18 12:54:01] FILTERED WITH RETURN CODE: 0
+----------------------------------------
+
+[2026-01-18 12:54:01] FILTERED WITH RETURN CODE: 0
+----------------------------------------
