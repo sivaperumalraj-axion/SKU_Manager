@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
 from db import (init_db, create_thread, get_all_threads, create_process, get_all_processes, 
-                get_process_details, add_schedule, get_all_schedules, get_history_log)
+                get_process_details, add_schedule, get_all_schedules, get_history_log,
+                add_sku, get_skus_paginated)
+import csv
+import io
 from scheduler import start_scheduler
 from data_manager import save_thread_files
 
@@ -101,6 +104,80 @@ def get_history():
     hist = get_history_log()
     return jsonify(history=hist)
 
+# --- SKU API ---
+@app.route('/api/skus', methods=['GET'])
+def list_skus():
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 100))
+    search = request.args.get('search')
+    retailer = request.args.get('retailer')
+    region = request.args.get('region')
+    
+    result = get_skus_paginated(page, limit, search, retailer, region)
+    return jsonify(result)
+
+@app.route('/api/skus', methods=['POST'])
+def create_sku():
+    data = request.json
+    sid = add_sku(
+        data.get('name'),
+        data.get('base_sku'),
+        data.get('sku'),
+        data.get('retailer'),
+        data.get('region'),
+        data.get('link'),
+        data.get('rating'),
+        data.get('review_count')
+    )
+    if sid:
+        return jsonify({"message": "SKU added", "id": sid})
+    return jsonify({"error": "Failed to add SKU (Duplicate SKU detected - 'sku' field must be unique)"}), 409
+
+@app.route('/api/skus/upload', methods=['POST'])
+def upload_skus():
+    file = request.files.get('file')
+    if not file:
+        return jsonify({"error": "No file uploaded"}), 400
+    
+    try:
+        # Parse CSV
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        
+        # Read first line to normalize headers
+        header_line = stream.readline()
+        fieldnames = [f.strip().lower() for f in header_line.split(',')]
+        
+        # Reset and parse with normalized fieldnames
+        stream.seek(0)
+        # Skip original header line in DictReader since we supply fieldnames
+        next(stream) 
+        
+        reader = csv.DictReader(stream, fieldnames=fieldnames)
+        
+        count = 0
+        errors = 0
+        
+        for row in reader:
+            try:
+                add_sku(
+                    row.get('name'),
+                    row.get('base_sku'),
+                    row.get('sku'),
+                    row.get('retailer'), # Map these if CSV header differs
+                    row.get('region'),
+                    row.get('link'),
+                    float(row.get('rating', 0)),
+                    int(row.get('review_count', 0))
+                )
+                count += 1
+            except Exception as e:
+                errors += 1
+                
+        return jsonify({"message": f"Processed {count} rows", "errors": errors})
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to parse CSV: {str(e)}"}), 400
+
 if __name__ == '__main__':
     # Disable reloader to prevent scheduler duplication
-    app.run(debug=True, use_reloader=False, port=5000)
+    app.run(debug=True, use_reloader=True, port=5000)

@@ -57,7 +57,34 @@ def init_db():
                     log_path TEXT,
                     output_dir TEXT
                 )''')
+
+    # 6. SKU Table
+    # NOTE: In production, use ALTER TABLE or migration. Here we recreate for simplicity if schema changes significantly on dev.
+    # Check if columns exist, if not, probably easiest to drop/recreate for this dev session or just create if not exists
+    # For this task, I will FORCE recreation of the table to ensure schema match.
+    # c.execute("DROP TABLE IF EXISTS skus") # uncomment to force reset
+    c.execute('''CREATE TABLE IF NOT EXISTS skus (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT,
+                    base_sku TEXT,
+                    sku TEXT UNIQUE,
+                    retailer TEXT,
+                    region TEXT,
+                    link TEXT,
+                    rating REAL,
+                    review_count INTEGER,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )''')
     
+    # Simple migration: check if retailer column exists, if not add it
+    try:
+        c.execute("SELECT retailer FROM skus LIMIT 1")
+    except sqlite3.OperationalError:
+        try:
+            c.execute("ALTER TABLE skus ADD COLUMN retailer TEXT")
+            c.execute("ALTER TABLE skus ADD COLUMN region TEXT")
+        except: pass
+
     conn.commit()
     conn.close()
 
@@ -223,3 +250,72 @@ def get_history_log():
     rows = c.fetchall()
     conn.close()
     return [{"id":r[0], "name": r[2], "start": r[3], "end": r[4], "status": r[5], "log": r[6], "out": r[7]} for r in rows]
+
+# --- SKU Manager ---
+def add_sku(name, base_sku, sku, retailer, region, link, rating, review_count):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    try:
+        c.execute('''INSERT INTO skus (name, base_sku, sku, retailer, region, link, rating, review_count)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                  (name, base_sku, sku, retailer, region, link, rating, review_count))
+        conn.commit()
+        sid = c.lastrowid
+    except sqlite3.IntegrityError:
+        sid = None # Duplicate SKU
+        # Optional: Update existing? 
+    finally:
+        conn.close()
+    return sid
+
+def get_skus_paginated(page=1, limit=50, search=None, retailer=None, region=None):
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    
+    offset = (page - 1) * limit
+    query = "SELECT * FROM skus WHERE 1=1"
+    params = []
+    
+    if search:
+        query += " AND (name LIKE ? OR sku LIKE ? OR base_sku LIKE ?)"
+        wild = f"%{search}%"
+        params.extend([wild, wild, wild])
+        
+    if retailer:
+        query += " AND retailer = ?"
+        params.append(retailer)
+        
+    if region:
+        query += " AND region = ?"
+        params.append(region)
+        
+    # Get Total Count
+    count_query = query.replace("SELECT *", "SELECT COUNT(*)")
+    c.execute(count_query, params)
+    total_count = c.fetchone()[0]
+    
+    # Get Data
+    query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+    
+    c.execute(query, params)
+    rows = c.fetchall()
+    conn.close()
+    
+    return {
+        "total": total_count,
+        "page": page,
+        "limit": limit,
+        "data": [{
+            "id": r['id'],
+            "name": r['name'],
+            "base_sku": r['base_sku'],
+            "sku": r['sku'],
+            "retailer": r['retailer'],
+            "region": r['region'],
+            "link": r['link'],
+            "rating": r['rating'],
+            "review_count": r['review_count']
+        } for r in rows]
+    }

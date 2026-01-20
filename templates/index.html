@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AutoScheduler Pro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
 </head>
 
 <body>
@@ -37,6 +37,10 @@
             <div class="nav-item" data-target="view-history">
                 <span class="icon">📜</span>
                 <span class="label">History</span>
+            </div>
+            <div class="nav-item" data-target="view-skus">
+                <span class="icon">📦</span>
+                <span class="label">SKU Manager</span>
             </div>
         </nav>
 
@@ -177,10 +181,117 @@
                 </div>
             </div>
 
+
+            <!-- VIEW: SKU Manager -->
+            <div id="view-skus" class="view hidden">
+                <div class="panel sku-panel">
+
+                    <!-- 1. Top Toolbar (Actions) -->
+                    <div class="panel-header"
+                        style="flex-shrink: 0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); z-index: 10;">
+                        <span>SKU Database</span>
+                        <div class="header-actions">
+                            <button id="btn-show-sku-manual" class="btn btn-sm btn-primary">Add Manual</button>
+                            <button id="btn-show-sku-upload" class="btn btn-sm btn-success">Upload CSV</button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Filter Bar -->
+                    <div class="filter-bar"
+                        style="padding: 10px 20px; background: #2d2d2d; display: flex; gap: 10px; border-bottom: 1px solid #444; align-items: center;">
+                        <input type="text" id="filter-search" placeholder="Search Name/SKU..." class="form-input"
+                            style="width: 200px; margin-bottom: 0;">
+                        <input type="text" id="filter-retailer" placeholder="Retailer" class="form-input"
+                            style="width: 150px; margin-bottom: 0;">
+                        <input type="text" id="filter-region" placeholder="Region" class="form-input"
+                            style="width: 100px; margin-bottom: 0;">
+                        <!-- Auto-filter on type, no button needed -->
+                        <span id="sku-count-display"
+                            style="margin-left: auto; color: #888; font-size: 0.9em;">Loading...</span>
+                    </div>
+
+                    <!-- 3. Forms (Overlay/Compact) -->
+                    <div id="sku-forms-container" style="background: #252525; border-bottom: 1px solid #444;">
+                        <!-- Manual Entry Form -->
+                        <div id="sku-manual-form" class="form-box hidden" style="margin: 10px 20px;">
+                            <h4>Add Single SKU</h4>
+                            <form id="form-add-sku">
+                                <div class="form-row">
+                                    <input type="text" name="name" placeholder="Name" class="form-input" required>
+                                    <input type="text" name="sku" placeholder="SKU (Unique)" class="form-input"
+                                        required>
+                                    <input type="text" name="base_sku" placeholder="Base SKU" class="form-input">
+                                </div>
+                                <div class="form-row">
+                                    <input type="text" name="retailer" placeholder="Retailer" class="form-input">
+                                    <input type="text" name="region" placeholder="Region" class="form-input">
+                                    <input type="number" step="0.1" name="rating" placeholder="Rating"
+                                        class="form-input">
+                                    <input type="number" name="review_count" placeholder="Start Reviews"
+                                        class="form-input">
+                                </div>
+                                <input type="url" name="link" placeholder="Product Link" class="form-input"
+                                    style="margin-bottom: 10px;">
+                                <div class="form-row">
+                                    <button type="submit" class="btn btn-primary">Save Record</button>
+                                    <button type="button" class="btn btn-sm"
+                                        onclick="document.getElementById('sku-manual-form').classList.add('hidden')"
+                                        style="background:#444; color:#fff;">Hide</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Upload CSV Form -->
+                        <div id="sku-upload-form" class="form-box hidden" style="margin: 10px 20px;">
+                            <h4>Upload CSV</h4>
+                            <p class="hint">Columns: name, base_sku, sku, retailer, region, link, rating, review_count
+                            </p>
+                            <form id="form-upload-sku">
+                                <input type="file" name="file" accept=".csv" required style="margin-bottom: 10px;">
+                                <div style="display: flex; gap: 10px;">
+                                    <button type="submit" class="btn btn-success">Upload & Process</button>
+                                    <button type="button" class="btn btn-sm"
+                                        onclick="document.getElementById('sku-upload-form').classList.add('hidden')"
+                                        style="background:#444; color:#fff;">Hide</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- 4. Data Table (Scrollable) -->
+                    <div class="panel-body" style="flex-grow: 1; overflow-y: auto; padding: 0;">
+                        <table class="data-table sku-table">
+                            <thead
+                                style="position: sticky; top: 0; background: #333; z-index: 5; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                                <tr>
+                                    <th>Region</th>
+                                    <th>Retailer</th>
+                                    <th>Name</th>
+                                    <th>SKU</th>
+                                    <th>Link</th>
+                                    <th>Rating</th>
+                                    <th>Reviews</th>
+                                </tr>
+                            </thead>
+                            <tbody id="skus-list-body"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- 5. Pagination Footer -->
+                    <div class="pagination-footer"
+                        style="padding: 10px; background: #222; border-top: 1px solid #444; display: flex; gap: 10px; align-items: center; justify-content: center;">
+                        <button id="btn-prev-page" class="btn btn-sm">Previous</button>
+                        <span id="page-indicator">Page 1</span>
+                        <button id="btn-next-page" class="btn btn-sm">Next</button>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     </main>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='script.js') }}?v=2"></script>
 </body>
 
 </html>

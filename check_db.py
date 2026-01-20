@@ -3,6 +3,11 @@ import sqlite3
 def check():
     conn = sqlite3.connect("tasks.db")
     c = conn.cursor()
+
+    print("--- SKUS ---")
+    c.execute("SELECT * FROM skus")
+    for row in c.fetchall():
+        print(row)
     
     print("--- SCHEDULES ---")
     c.execute("SELECT * FROM schedules")
@@ -33,8 +38,24 @@ def check():
     c.execute("PRAGMA table_info(executions)")
     for row in c.fetchall():
         print(row)
+    
+
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT name
+        FROM sqlite_master
+        WHERE type='table'
+        ORDER BY name;
+    """)
+    tables = [row[0] for row in c.fetchall()]
+    print("Tables found:")
+    for t in tables:
+        print("-", t)
+
         
     conn.close()
+
 
 if __name__ == "__main__":
     check()

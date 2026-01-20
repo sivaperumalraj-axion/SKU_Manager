@@ -188,11 +188,160 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
+    // --- 4. SKU MANAGER ---
+    const skusListBody = document.getElementById('skus-list-body');
+    const skuManualForm = document.getElementById('sku-manual-form');
+    const skuUploadForm = document.getElementById('sku-upload-form');
+    const formAddSku = document.getElementById('form-add-sku');
+    const formUploadSku = document.getElementById('form-upload-sku');
+
+    // Controls
+    const btnPrevPage = document.getElementById('btn-prev-page');
+    const btnNextPage = document.getElementById('btn-next-page');
+    const pageIndicator = document.getElementById('page-indicator');
+    const skuCountDisplay = document.getElementById('sku-count-display');
+    // const btnApplyFilters = document.getElementById('btn-apply-filters'); // Removed
+
+    let currentPage = 1;
+    let currentLimit = 100;
+
+    document.getElementById('btn-show-sku-manual').addEventListener('click', () => {
+        skuManualForm.classList.remove('hidden');
+        skuUploadForm.classList.add('hidden');
+    });
+
+    document.getElementById('btn-show-sku-upload').addEventListener('click', () => {
+        skuUploadForm.classList.remove('hidden');
+        skuManualForm.classList.add('hidden');
+    });
+
+    async function loadSkus(page = 1) {
+        const search = document.getElementById('filter-search').value;
+        const retailer = document.getElementById('filter-retailer').value;
+        const region = document.getElementById('filter-region').value;
+
+        try {
+            const params = new URLSearchParams({
+                page: page,
+                limit: currentLimit,
+                search: search,
+                retailer: retailer,
+                region: region
+            });
+            const res = await fetch(`/api/skus?${params.toString()}`);
+            const json = await res.json();
+            const rows = json.data || json.skus;
+            if (!rows) throw new Error("Missing data in API response");
+
+            // Render
+            skusListBody.innerHTML = rows.map(s => `
+                <tr>
+                    <td>${s.region || '-'}</td>
+                    <td>${s.retailer || '-'}</td>
+                    <td>${s.name || ''}</td>
+                    <td>${s.sku || ''}</td>
+                    <td>${s.link ? `<a href="${s.link}" target="_blank">🔗</a>` : ''}</td>
+                    <td>${s.rating || 0}</td>
+                    <td>${s.review_count || 0}</td>
+                </tr>
+            `).join('');
+
+            if (rows.length === 0) {
+                skusListBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #888;">No records found.</td></tr>';
+            }
+
+            // Updates
+            currentPage = json.page || 1;
+            pageIndicator.innerText = `Page ${currentPage}`;
+            skuCountDisplay.innerText = `${json.total || 0} Records`;
+
+            btnPrevPage.disabled = currentPage <= 1;
+            btnNextPage.disabled = json.total ? (currentPage * currentLimit >= json.total) : true;
+
+        } catch (e) {
+            console.error("Failed to load SKUs", e);
+            skusListBody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center; padding: 20px;">
+                Error loading data. Please refresh the page.
+            </td></tr>`;
+        }
+    }
+
+    // Filter & Pagination Events
+    // Filter & Pagination Events
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    const debouncedLoad = debounce(() => loadSkus(1), 300);
+
+    document.getElementById('filter-search').addEventListener('input', debouncedLoad);
+    document.getElementById('filter-retailer').addEventListener('input', debouncedLoad);
+    document.getElementById('filter-region').addEventListener('input', debouncedLoad);
+
+    btnPrevPage.addEventListener('click', () => loadSkus(currentPage - 1));
+    btnNextPage.addEventListener('click', () => loadSkus(currentPage + 1));
+
+    formAddSku.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const raw = new FormData(formAddSku);
+        const data = Object.fromEntries(raw.entries());
+
+        try {
+            const res = await fetch('/api/skus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                alert("SKU Added");
+                formAddSku.reset();
+                skuManualForm.classList.add('hidden');
+                loadSkus(1); // Reload first page to see new record
+            } else {
+                const json = await res.json();
+                alert("Error: " + (json.error || "Unknown Error"));
+            }
+        } catch (e) { console.error(e); }
+    });
+
+    formUploadSku.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = new FormData(formUploadSku);
+
+        try {
+            const res = await fetch('/api/skus/upload', {
+                method: 'POST',
+                body: data
+            });
+            const json = await res.json();
+            if (res.ok) {
+                alert(json.message);
+                formUploadSku.reset();
+                skuUploadForm.classList.add('hidden');
+                loadSkus(1); // Reset to first page
+            } else {
+                alert("Error: " + json.error);
+            }
+        } catch (e) { console.error(e); }
+    });
+
+    // Initial Load
     function init() {
         loadThreads();
         loadProcesses();
         loadSchedules();
         loadHistory();
+
+        // Clear filters to ensure data visibility
+        document.getElementById('filter-search').value = '';
+        document.getElementById('filter-retailer').value = '';
+        document.getElementById('filter-region').value = '';
+        loadSkus(1);
 
         setInterval(() => {
             loadSchedules();
