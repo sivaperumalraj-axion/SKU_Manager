@@ -42,6 +42,10 @@
                 <span class="icon">📦</span>
                 <span class="label">SKU Manager</span>
             </div>
+            <div class="nav-item" data-target="view-database">
+                <span class="icon">🗄️</span>
+                <span class="label">Database</span>
+            </div>
         </nav>
 
         <!-- Main Content -->
@@ -181,6 +185,91 @@
                 </div>
             </div>
 
+
+            <!-- VIEW: Database -->
+            <div id="view-database" class="view hidden">
+                <div class="panel">
+                    <div class="panel-header" style="flex-shrink: 0;">
+                        <span>Database Query Tool</span>
+                        <div class="header-actions">
+                            <button id="btn-show-tables" class="btn btn-sm btn-primary">Show Tables</button>
+                            <button id="btn-clear-query" class="btn btn-sm">Clear</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-body" style="display: flex; flex-direction: column; gap: 20px; overflow-y: auto;">
+
+                        <!-- Tables Info Section -->
+                        <div id="tables-info-section" class="hidden"
+                            style="background: #2d2d2d; padding: 15px; border-radius: 8px; border: 1px solid #444;">
+                            <h4 style="margin-top: 0; color: #4fc3f7;">Available Tables</h4>
+                            <div id="tables-list"
+                                style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                                <!-- Tables will be populated here -->
+                            </div>
+                            <div id="table-schema-container">
+                                <!-- Schema will be shown here when table is clicked -->
+                            </div>
+                        </div>
+
+                        <!-- Query Input Section -->
+                        <div style="background: #2d2d2d; padding: 15px; border-radius: 8px; border: 1px solid #444;">
+                            <h4 style="margin-top: 0; color: #4fc3f7;">SQL Query</h4>
+                            <textarea id="sql-query-input"
+                                placeholder="Enter your SQL query here...&#10;Example: SELECT * FROM threads LIMIT 10"
+                                style="width: 100%; min-height: 150px; background: #1e1e1e; color: #e0e0e0; border: 1px solid #555; border-radius: 4px; padding: 12px; font-family: 'Courier New', monospace; font-size: 14px; resize: vertical;"></textarea>
+                            <div style="margin-top: 10px; display: flex; gap: 10px; align-items: center;">
+                                <button id="btn-execute-query" class="btn btn-primary">Execute Query</button>
+                                <span id="query-status" style="color: #888; font-size: 0.9em;"></span>
+                            </div>
+                        </div>
+
+                        <!-- Query Examples -->
+                        <div style="background: #2d2d2d; padding: 15px; border-radius: 8px; border: 1px solid #444;">
+                            <h4 style="margin-top: 0; color: #4fc3f7;">Quick Examples</h4>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <button class="btn btn-sm example-query" data-query="SELECT * FROM threads LIMIT 10">All
+                                    Threads</button>
+                                <button class="btn btn-sm example-query" data-query="SELECT * FROM processes">All
+                                    Processes</button>
+                                <button class="btn btn-sm example-query"
+                                    data-query="SELECT * FROM schedules ORDER BY run_time DESC LIMIT 20">Recent
+                                    Schedules</button>
+                                <button class="btn btn-sm example-query"
+                                    data-query="SELECT * FROM executions ORDER BY start_time DESC LIMIT 20">Execution
+                                    History</button>
+                                <button class="btn btn-sm example-query" data-query="SELECT * FROM skus LIMIT 50">SKU
+                                    Data</button>
+                                <button class="btn btn-sm example-query"
+                                    data-query="SELECT name FROM sqlite_master WHERE type='table'">List Tables</button>
+                            </div>
+                        </div>
+
+                        <!-- Results Section -->
+                        <div id="query-results-section" class="hidden"
+                            style="background: #2d2d2d; padding: 15px; border-radius: 8px; border: 1px solid #444;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h4 style="margin: 0; color: #4fc3f7;">Query Results</h4>
+                                <span id="result-count" style="color: #888; font-size: 0.9em;"></span>
+                            </div>
+                            <div style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+                                <table id="query-results-table" class="data-table" style="min-width: 100%;">
+                                    <thead id="results-table-head"></thead>
+                                    <tbody id="results-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Success/Error Message -->
+                        <div id="query-message-section" class="hidden"
+                            style="padding: 15px; border-radius: 8px; border: 1px solid #444;">
+                            <p id="query-message" style="margin: 0;"></p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
 
             <!-- VIEW: SKU Manager -->
             <div id="view-skus" class="view hidden">

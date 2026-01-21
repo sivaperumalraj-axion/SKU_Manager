@@ -178,6 +178,119 @@ def upload_skus():
     except Exception as e:
         return jsonify({"error": f"Failed to parse CSV: {str(e)}"}), 400
 
+# --- Database Query API ---
+@app.route('/api/database/query', methods=['POST'])
+def execute_query():
+    """Execute a custom SQL query on the tasks.db database"""
+    data = request.json
+    query = data.get('query', '').strip()
+    
+    if not query:
+        return jsonify({"error": "No query provided"}), 400
+    
+    # Security: Prevent multiple statements and dangerous operations
+    query_lower = query.lower()
+    
+    # Block multiple statements
+    if ';' in query and query.rstrip().rstrip(';').count(';') > 0:
+        return jsonify({"error": "Multiple statements not allowed"}), 400
+    
+    import sqlite3
+    conn = None
+    
+    try:
+        conn = sqlite3.connect('tasks.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Execute the query
+        cursor.execute(query)
+        
+        # Check if it's a SELECT query (returns data)
+        if query_lower.startswith('select') or query_lower.startswith('pragma'):
+            rows = cursor.fetchall()
+            
+            # Get column names
+            columns = [description[0] for description in cursor.description] if cursor.description else []
+            
+            # Convert rows to list of dictionaries
+            results = []
+            for row in rows:
+                results.append(dict(zip(columns, row)))
+            
+            return jsonify({
+                "success": True,
+                "columns": columns,
+                "rows": results,
+                "rowCount": len(results),
+                "type": "SELECT"
+            })
+        else:
+            # For INSERT, UPDATE, DELETE, etc.
+            conn.commit()
+            affected_rows = cursor.rowcount
+            
+            return jsonify({
+                "success": True,
+                "message": f"Query executed successfully. {affected_rows} row(s) affected.",
+                "rowCount": affected_rows,
+                "type": "MODIFY"
+            })
+            
+    except sqlite3.Error as e:
+        return jsonify({
+            "success": False,
+            "error": f"SQL Error: {str(e)}"
+        }), 400
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Error: {str(e)}"
+        }), 500
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/api/database/tables', methods=['GET'])
+def get_tables():
+    """Get list of all tables in the database"""
+    import sqlite3
+    try:
+        conn = sqlite3.connect('tasks.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+        tables = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return jsonify({"tables": tables})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/database/schema/<table_name>', methods=['GET'])
+def get_table_schema(table_name):
+    """Get schema information for a specific table"""
+    import sqlite3
+    try:
+        conn = sqlite3.connect('tasks.db')
+        cursor = conn.cursor()
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        columns = cursor.fetchall()
+        conn.close()
+        
+        schema = []
+        for col in columns:
+            schema.append({
+                "cid": col[0],
+                "name": col[1],
+                "type": col[2],
+                "notnull": col[3],
+                "default": col[4],
+                "pk": col[5]
+            })
+        
+        return jsonify({"schema": schema})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     # Disable reloader to prevent scheduler duplication
     app.run(debug=True, use_reloader=True, port=5000)

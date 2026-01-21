@@ -330,6 +330,187 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.error(e); }
     });
 
+    // --- 5. DATABASE QUERY TOOL ---
+    const sqlQueryInput = document.getElementById('sql-query-input');
+    const btnExecuteQuery = document.getElementById('btn-execute-query');
+    const btnShowTables = document.getElementById('btn-show-tables');
+    const btnClearQuery = document.getElementById('btn-clear-query');
+    const queryStatus = document.getElementById('query-status');
+    const resultsSection = document.getElementById('query-results-section');
+    const messageSection = document.getElementById('query-message-section');
+    const queryMessage = document.getElementById('query-message');
+    const resultsTableHead = document.getElementById('results-table-head');
+    const resultsTableBody = document.getElementById('results-table-body');
+    const resultCount = document.getElementById('result-count');
+    const tablesInfoSection = document.getElementById('tables-info-section');
+    const tablesList = document.getElementById('tables-list');
+    const tableSchemaContainer = document.getElementById('table-schema-container');
+
+    // Execute Query Button
+    btnExecuteQuery.addEventListener('click', async () => {
+        const query = sqlQueryInput.value.trim();
+        if (!query) {
+            alert('Please enter a SQL query');
+            return;
+        }
+
+        // Hide previous results
+        resultsSection.classList.add('hidden');
+        messageSection.classList.add('hidden');
+        queryStatus.textContent = 'Executing...';
+
+        try {
+            const res = await fetch('/api/database/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                queryStatus.textContent = '';
+                
+                if (data.type === 'SELECT') {
+                    // Display results in table
+                    resultsSection.classList.remove('hidden');
+                    
+                    // Create table headers
+                    if (data.columns && data.columns.length > 0) {
+                        resultsTableHead.innerHTML = '<tr>' + 
+                            data.columns.map(col => `<th>${col}</th>`).join('') + 
+                            '</tr>';
+                    }
+                    
+                    // Create table rows
+                    if (data.rows && data.rows.length > 0) {
+                        resultsTableBody.innerHTML = data.rows.map(row => {
+                            return '<tr>' + 
+                                data.columns.map(col => {
+                                    const value = row[col];
+                                    return `<td>${value !== null && value !== undefined ? value : ''}</td>`;
+                                }).join('') + 
+                                '</tr>';
+                        }).join('');
+                        
+                        resultCount.textContent = `${data.rowCount} row(s) returned`;
+                    } else {
+                        resultsTableBody.innerHTML = '<tr><td colspan="100" style="text-align:center; padding: 2rem; color: #888;">No data returned</td></tr>';
+                        resultCount.textContent = '0 rows';
+                    }
+                } else {
+                    // Display success message for non-SELECT queries
+                    messageSection.classList.remove('hidden');
+                    messageSection.style.background = '#1b5e20';
+                    messageSection.style.borderColor = '#4caf50';
+                    queryMessage.style.color = '#c8e6c9';
+                    queryMessage.textContent = data.message || 'Query executed successfully';
+                }
+            } else {
+                // Display error
+                queryStatus.textContent = '';
+                messageSection.classList.remove('hidden');
+                messageSection.style.background = '#7f1d1d';
+                messageSection.style.borderColor = '#f44336';
+                queryMessage.style.color = '#ffcdd2';
+                queryMessage.textContent = data.error || 'Unknown error occurred';
+            }
+        } catch (error) {
+            queryStatus.textContent = '';
+            messageSection.classList.remove('hidden');
+            messageSection.style.background = '#7f1d1d';
+            messageSection.style.borderColor = '#f44336';
+            queryMessage.style.color = '#ffcdd2';
+            queryMessage.textContent = 'Network error: ' + error.message;
+        }
+    });
+
+    // Clear Query Button
+    btnClearQuery.addEventListener('click', () => {
+        sqlQueryInput.value = '';
+        resultsSection.classList.add('hidden');
+        messageSection.classList.add('hidden');
+        queryStatus.textContent = '';
+    });
+
+    // Show Tables Button
+    btnShowTables.addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/database/tables');
+            const data = await res.json();
+            
+            if (data.tables && data.tables.length > 0) {
+                tablesInfoSection.classList.remove('hidden');
+                tablesList.innerHTML = data.tables.map(table => 
+                    `<button class="btn btn-sm table-btn" data-table="${table}" style="background: #424242; color: #fff;">${table}</button>`
+                ).join('');
+                
+                // Add click handlers to table buttons
+                document.querySelectorAll('.table-btn').forEach(btn => {
+                    btn.addEventListener('click', () => loadTableSchema(btn.dataset.table));
+                });
+                
+                tableSchemaContainer.innerHTML = '<p style="color: #888; margin-top: 10px;">Click on a table to view its schema</p>';
+            } else {
+                alert('No tables found');
+            }
+        } catch (error) {
+            alert('Error loading tables: ' + error.message);
+        }
+    });
+
+    // Load Table Schema
+    async function loadTableSchema(tableName) {
+        try {
+            const res = await fetch(`/api/database/schema/${tableName}`);
+            const data = await res.json();
+            
+            if (data.schema && data.schema.length > 0) {
+                tableSchemaContainer.innerHTML = `
+                    <h5 style="color: #4fc3f7; margin-top: 15px;">Table: ${tableName}</h5>
+                    <table class="data-table" style="margin-top: 10px;">
+                        <thead>
+                            <tr>
+                                <th>Column</th>
+                                <th>Type</th>
+                                <th>Null</th>
+                                <th>Default</th>
+                                <th>PK</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.schema.map(col => `
+                                <tr>
+                                    <td><strong>${col.name}</strong></td>
+                                    <td>${col.type}</td>
+                                    <td>${col.notnull ? 'NO' : 'YES'}</td>
+                                    <td>${col.default || '-'}</td>
+                                    <td>${col.pk ? '✓' : ''}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <button class="btn btn-sm btn-primary" style="margin-top: 10px;" onclick="document.getElementById('sql-query-input').value='SELECT * FROM ${tableName} LIMIT 10'">
+                        Quick Select
+                    </button>
+                `;
+            } else {
+                tableSchemaContainer.innerHTML = '<p style="color: red;">Error loading schema</p>';
+            }
+        } catch (error) {
+            tableSchemaContainer.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+        }
+    }
+
+    // Example Query Buttons
+    document.querySelectorAll('.example-query').forEach(btn => {
+        btn.addEventListener('click', () => {
+            sqlQueryInput.value = btn.dataset.query;
+            // Optionally auto-execute
+            // btnExecuteQuery.click();
+        });
+    });
+
     // Initial Load
     function init() {
         loadThreads();

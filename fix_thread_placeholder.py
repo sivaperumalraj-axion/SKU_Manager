@@ -7,8 +7,10 @@ def fix_thread():
     print("Fixing BestBuy_US thread definition...")
     
     # Check current
-    c.execute("SELECT * FROM threads WHERE name='BestBuy_US'")
-    print(f"Before: {c.fetchone()}")
+    c.execute("SELECT * FROM threads")
+    # print(f"Before: {c.fetchall()}")
+    for c in c.fetchall():
+        print(c)
     
     # Swap script and config if they look swapped, or just set hardcoded logic if we know the filenames
     # Based on the file system from previous `list_dir` (I recall checking `threads` dir earlier but maybe not inside BestBuy_US)
