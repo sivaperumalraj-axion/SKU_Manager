@@ -1,6 +1,0 @@
-[2026-01-18 13:19:01] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\VerifyThread_01\test_script.py
-[2026-01-18 13:19:01] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\VerifyProcess_01\20260118_131901
-Hello from Verification Thread!
-
-[2026-01-18 13:19:02] FILTERED WITH RETURN CODE: 0
-----------------------------------------

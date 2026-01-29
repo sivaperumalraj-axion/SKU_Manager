@@ -1,0 +1,6 @@
+[2026-01-29 13:07:56] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\helloworld\helloworld.py
+[2026-01-29 13:07:56] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\Hello World\20260129_130756_43
+Hello World!
+
+[2026-01-29 13:07:56] FILTERED WITH RETURN CODE: 0
+----------------------------------------

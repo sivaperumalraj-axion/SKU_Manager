@@ -51,6 +51,21 @@ def create_process_run_dir(process_name, run_id=None):
 def get_thread_dir(thread_name):
     return os.path.abspath(os.path.join(THREADS_DIR, thread_name))
 
+def delete_thread_files(thread_name):
+    target_dir = os.path.join(THREADS_DIR, thread_name)
+    if os.path.exists(target_dir):
+        shutil.rmtree(target_dir)
+        return True
+    return False
+
+def delete_process_files(process_name):
+    """Deletes all execution output and run directories for this process."""
+    target_dir = os.path.join(PROCESS_DIR, process_name)
+    if os.path.exists(target_dir):
+        shutil.rmtree(target_dir)
+        return True
+    return False
+
 def list_process_outputs():
     """Lists recent process runs for the UI."""
     # Logic to walk PROCESS_DIR and return structured data

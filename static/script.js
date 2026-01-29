@@ -19,21 +19,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const threadsGrid = document.getElementById('threads-grid');
     const builderSourceList = document.getElementById('builder-source-list'); // For Process Builder
 
+    let editingThreadId = null;
+    let cancelThreadEditBtn = null; // Will create dynamically or add to HTML
+
     threadForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(threadForm);
+
         try {
-            const res = await fetch('/api/threads', { method: 'POST', body: formData });
+            let res;
+            if (editingThreadId) {
+                // UPDATE
+                res = await fetch(`/api/threads/${editingThreadId}`, { method: 'PUT', body: formData });
+            } else {
+                // CREATE
+                res = await fetch('/api/threads', { method: 'POST', body: formData });
+            }
+
             const json = await res.json();
             if (res.ok) {
-                alert('Thread Created!');
-                threadForm.reset();
+                alert(editingThreadId ? 'Thread Updated!' : 'Thread Created!');
+                resetThreadForm();
                 loadThreads();
             } else {
                 alert('Error: ' + json.error);
             }
         } catch (e) { console.error(e); }
     });
+
+    function resetThreadForm() {
+        threadForm.reset();
+        editingThreadId = null;
+        document.querySelector('#form-create-thread button[type="submit"]').textContent = 'Create Thread';
+        // Add cancel button logic if strictly needed, but simple reset is fine
+    }
 
     async function loadThreads() {
         const res = await fetch('/api/threads');
@@ -44,9 +63,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="card">
                 <div class="card-title">${t.name}</div>
                 <div class="card-meta">
+                    ID: ${t.id}<br>
                     Type: ${t.type}<br>
                     Script: ${t.script}<br>
                     Config: ${t.config || 'None'}
+                </div>
+                <div style="margin-top:10px; display:flex; gap:5px;">
+                    <button class="btn btn-sm btn-primary" onclick="editThread(${t.id})">Edit</button>
+                    <button class="btn btn-sm" onclick="deleteThread(${t.id})" style="background:#d32f2f; color:white;">Delete</button>
                 </div>
             </div>
         `).join('');
@@ -61,6 +85,36 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
 
+    window.editThread = async (id) => {
+        // Fetch full details
+        const res = await fetch(`/api/threads/${id}`);
+        const t = await res.json();
+        if (!t) return;
+
+        // Populate inputs
+        threadForm.querySelector('[name="name"]').value = t.name;
+        threadForm.querySelector('[name="type"]').value = t.type;
+        // Files cannot be pre-populated in file input, users must re-upload if changing.
+
+        editingThreadId = id;
+        document.querySelector('#form-create-thread button[type="submit"]').textContent = 'Update Thread';
+
+        // Scroll to form
+        threadForm.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.deleteThread = async (id) => {
+        if (!confirm('Delete thread? This may break processes using it.')) return;
+
+        const res = await fetch(`/api/threads/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadThreads();
+        } else {
+            const j = await res.json();
+            alert("Error: " + j.error);
+        }
+    };
+
     // --- 2. PROCESS BUILDER ---
     const builderTargetList = document.getElementById('builder-target-list');
     const builderProcessName = document.getElementById('builder-process-name');
@@ -69,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const scheduleProcessSelect = document.getElementById('schedule-process-select'); // For Scheduler
 
     let currentProcessThreads = []; // List of IDs
+    let editingProcessId = null;
 
     window.addThreadToProcess = (id, name) => {
         currentProcessThreads.push(id);
@@ -93,6 +148,15 @@ document.addEventListener('DOMContentLoaded', () => {
         renderBuilderTarget();
     };
 
+    // Helper to clear builder
+    window.clearBuilder = () => {
+        editingProcessId = null;
+        builderProcessName.value = '';
+        currentProcessThreads = [];
+        renderBuilderTarget();
+        btnSaveProcess.textContent = 'Save Process';
+    };
+
     btnSaveProcess.addEventListener('click', async () => {
         const name = builderProcessName.value;
         if (!name || currentProcessThreads.length === 0) {
@@ -100,17 +164,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const res = await fetch('/api/processes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, thread_ids: currentProcessThreads })
-        });
+        let res;
+        const payload = { name, thread_ids: currentProcessThreads };
+
+        if (editingProcessId) {
+            res = await fetch(`/api/processes/${editingProcessId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } else {
+            res = await fetch('/api/processes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        }
 
         if (res.ok) {
-            alert('Process Saved!');
-            builderProcessName.value = '';
-            currentProcessThreads = [];
-            renderBuilderTarget();
+            alert(editingProcessId ? 'Process Updated!' : 'Process Saved!');
+            clearBuilder();
             loadProcesses();
         } else {
             alert('Error');
@@ -126,7 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <tr>
                 <td>${p.id}</td>
                 <td>${p.name}</td>
-                <td><button disabled>Edit (Coming Soon)</button></td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="editProcess(${p.id})">Edit</button>
+                    <button class="btn btn-sm" onclick="deleteProcess(${p.id})" style="background:#d32f2f; color:white;">Delete</button>
+                </td>
             </tr>
         `).join('');
 
@@ -134,6 +210,36 @@ document.addEventListener('DOMContentLoaded', () => {
         scheduleProcessSelect.innerHTML = '<option value="" disabled selected>Select Process...</option>' +
             data.processes.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     }
+
+    window.editProcess = async (id) => {
+        const res = await fetch(`/api/processes/${id}`);
+        const data = await res.json();
+        if (!data || data.error) return;
+
+        editingProcessId = id;
+        builderProcessName.value = data.name;
+
+        // Extract thread IDs from details
+        // The API returns threads: [{id: 1, ...}, ...]
+        currentProcessThreads = data.threads.map(t => t.id);
+
+        renderBuilderTarget();
+        btnSaveProcess.textContent = 'Update Process';
+
+        // Scroll to builder
+        document.querySelector('.builder-container').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.deleteProcess = async (id) => {
+        if (!confirm('Delete process?')) return;
+
+        const res = await fetch(`/api/processes/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadProcesses();
+        } else {
+            alert("Error");
+        }
+    };
 
     // --- 3. SCHEDULER & HISTORY ---
     const scheduleTimeInput = document.getElementById('schedule-time-input');
@@ -165,14 +271,23 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadSchedules() {
         const res = await fetch('/api/schedules');
         const data = await res.json();
-        schedulesListBody.innerHTML = data.schedules.map(s => `
+        schedulesListBody.innerHTML = data.schedules.map(s => {
+            let actionBtn = '';
+            if (s.eid) {
+                actionBtn = `<button class="btn btn-sm btn-primary" onclick="window.location.href='/api/history/${s.eid}/download'">Download</button>`;
+            }
+
+            return `
             <tr>
                 <td>${s.time}</td>
                 <td>${s.type}</td>
                 <td>${s.name}</td>
-                <td>${s.status}</td>
+                <td>
+                    ${s.status}
+                    ${actionBtn}
+                </td>
             </tr>
-        `).join('');
+        `}).join('');
     }
 
     async function loadHistory() {
@@ -183,7 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${h.start}</td>
                 <td>${h.name}</td>
                 <td>${h.status}</td>
-                <td style="font-family:monospace; font-size:0.8em">${h.log}</td>
+                <td style="font-family:monospace; font-size:0.8em">
+                    ${h.log}
+                    <button class="btn btn-sm btn-primary" style="margin-left:10px;" onclick="window.location.href='/api/history/${h.id}/download'">
+                        Download Output
+                    </button>
+                </td>
             </tr>
         `).join('');
     }
@@ -370,29 +490,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.success) {
                 queryStatus.textContent = '';
-                
+
                 if (data.type === 'SELECT') {
                     // Display results in table
                     resultsSection.classList.remove('hidden');
-                    
+
                     // Create table headers
                     if (data.columns && data.columns.length > 0) {
-                        resultsTableHead.innerHTML = '<tr>' + 
-                            data.columns.map(col => `<th>${col}</th>`).join('') + 
+                        resultsTableHead.innerHTML = '<tr>' +
+                            data.columns.map(col => `<th>${col}</th>`).join('') +
                             '</tr>';
                     }
-                    
+
                     // Create table rows
                     if (data.rows && data.rows.length > 0) {
                         resultsTableBody.innerHTML = data.rows.map(row => {
-                            return '<tr>' + 
+                            return '<tr>' +
                                 data.columns.map(col => {
                                     const value = row[col];
                                     return `<td>${value !== null && value !== undefined ? value : ''}</td>`;
-                                }).join('') + 
+                                }).join('') +
                                 '</tr>';
                         }).join('');
-                        
+
                         resultCount.textContent = `${data.rowCount} row(s) returned`;
                     } else {
                         resultsTableBody.innerHTML = '<tr><td colspan="100" style="text-align:center; padding: 2rem; color: #888;">No data returned</td></tr>';
@@ -438,18 +558,18 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch('/api/database/tables');
             const data = await res.json();
-            
+
             if (data.tables && data.tables.length > 0) {
                 tablesInfoSection.classList.remove('hidden');
-                tablesList.innerHTML = data.tables.map(table => 
+                tablesList.innerHTML = data.tables.map(table =>
                     `<button class="btn btn-sm table-btn" data-table="${table}" style="background: #424242; color: #fff;">${table}</button>`
                 ).join('');
-                
+
                 // Add click handlers to table buttons
                 document.querySelectorAll('.table-btn').forEach(btn => {
                     btn.addEventListener('click', () => loadTableSchema(btn.dataset.table));
                 });
-                
+
                 tableSchemaContainer.innerHTML = '<p style="color: #888; margin-top: 10px;">Click on a table to view its schema</p>';
             } else {
                 alert('No tables found');
@@ -464,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const res = await fetch(`/api/database/schema/${tableName}`);
             const data = await res.json();
-            
+
             if (data.schema && data.schema.length > 0) {
                 tableSchemaContainer.innerHTML = `
                     <h5 style="color: #4fc3f7; margin-top: 15px;">Table: ${tableName}</h5>

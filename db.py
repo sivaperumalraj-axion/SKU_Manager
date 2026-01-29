@@ -103,6 +103,48 @@ def create_thread(name, thread_type, script_filename, config_filename=None):
         conn.close()
     return tid
 
+def update_thread(thread_id, name, thread_type, script_filename, config_filename=None):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    try:
+        # Check if name exists for OTHER threads
+        c.execute("SELECT id FROM threads WHERE name = ? AND id != ?", (name, thread_id))
+        if c.fetchone():
+            return None # Duplicate Name
+
+        query = "UPDATE threads SET name=?, type=?, script_filename=?"
+        params = [name, thread_type, script_filename]
+        
+        if config_filename:
+            query += ", config_filename=?"
+            params.append(config_filename)
+        
+        query += " WHERE id=?"
+        params.append(thread_id)
+        
+        c.execute(query, tuple(params))
+        conn.commit()
+        success = True
+    except sqlite3.IntegrityError:
+        success = False
+    finally:
+        conn.close()
+    return success
+
+def delete_thread(thread_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    # Check usage in processes
+    c.execute("SELECT COUNT(*) FROM process_items WHERE thread_id = ?", (thread_id,))
+    if c.fetchone()[0] > 0:
+        conn.close()
+        return False # Moving to 'In Use' error handling usually better, but return False for now
+        
+    c.execute("DELETE FROM threads WHERE id = ?", (thread_id,))
+    conn.commit()
+    conn.close()
+    return True
+
 def get_all_threads():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -145,6 +187,38 @@ def create_process(name, thread_ids):
     finally:
         conn.close()
     return result
+
+def update_process(process_id, name, thread_ids):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    try:
+        # Update Name
+        c.execute("UPDATE processes SET name = ? WHERE id = ?", (name, process_id))
+        
+        # Replace Items
+        c.execute("DELETE FROM process_items WHERE process_id = ?", (process_id,))
+        for idx, tid in enumerate(thread_ids):
+            c.execute("INSERT INTO process_items (process_id, thread_id, sequence_order) VALUES (?, ?, ?)",
+                      (process_id, tid, idx))
+        conn.commit()
+        success = True
+    except sqlite3.IntegrityError:
+        success = False
+    finally:
+        conn.close()
+    return success
+
+def delete_process(process_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    
+    # Simple cascade delete simulation
+    c.execute("DELETE FROM process_items WHERE process_id = ?", (process_id,))
+    c.execute("DELETE FROM processes WHERE id = ?", (process_id,))
+    
+    conn.commit()
+    conn.close()
+    return True
 
 def get_all_processes():
     conn = sqlite3.connect(DB_FILE)
@@ -210,9 +284,14 @@ def update_schedule_status(schedule_id, status):
 def get_all_schedules():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    # LEFT JOIN with executions. Assuming one execution per schedule for now OR getting latest.
+    # Note: If a schedule runs multiple times (recurrent), this table design might need revisiting,
+    # but for now 'schedules' seems to be individual scheduled instances?
+    # Based on 'add_schedule', it just inserts.
     c.execute('''
         SELECT s.id, s.entity_type, s.run_time, s.status, 
-               CASE WHEN s.entity_type = 'PROCESS' THEN p.name ELSE t.name END as name
+               CASE WHEN s.entity_type = 'PROCESS' THEN p.name ELSE t.name END as name,
+               (SELECT id FROM executions WHERE schedule_id = s.id ORDER BY start_time DESC LIMIT 1) as execution_id
         FROM schedules s
         LEFT JOIN processes p ON s.entity_type = 'PROCESS' AND s.entity_id = p.id
         LEFT JOIN threads t ON s.entity_type = 'THREAD' AND s.entity_id = t.id
@@ -220,7 +299,7 @@ def get_all_schedules():
     ''')
     rows = c.fetchall()
     conn.close()
-    return [{"id": r[0], "type": r[1], "time": r[2], "status": r[3], "name": r[4]} for r in rows]
+    return [{"id": r[0], "type": r[1], "time": r[2], "status": r[3], "name": r[4], "eid": r[5]} for r in rows]
 
 # --- History ---
 def log_execution_start(schedule_id, process_name, log_path, output_dir):
@@ -250,6 +329,16 @@ def get_history_log():
     rows = c.fetchall()
     conn.close()
     return [{"id":r[0], "name": r[2], "start": r[3], "end": r[4], "status": r[5], "log": r[6], "out": r[7]} for r in rows]
+
+def get_execution_details(execution_id):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT * FROM executions WHERE id = ?", (execution_id,))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return {"id":row[0], "name": row[2], "start": row[3], "end": row[4], "status": row[5], "log": row[6], "output_dir": row[7]}
+    return None
 
 # --- SKU Manager ---
 def add_sku(name, base_sku, sku, retailer, region, link, rating, review_count):

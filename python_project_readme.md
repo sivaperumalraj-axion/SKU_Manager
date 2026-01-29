@@ -95,3 +95,15 @@ project/
 1. It should have "Thread" page. In Tjread page. We able to create the thread and able to schedule the thread. the thread can any excuteable python file. Thread can be any types. As of now we have two types of thread. Which is "Scraping" and "Others". Any number of thread can be add able. Scraping thread all ways expect two files .py and .csv files. The csv file is the input file for the thread. The .py file is the main file for the thread. These files have to saves in thread folder with the name of thread name.
 
 2. "Process" page. In Process page. We able to create the process with consist of threads. Multiple threads can be added to the process in series manner. The threads will excute one after another. A process can be scheduled to run at a specific time and date. User able to add multiple time and date to the process. User able to add multiple process to the system. These process will run regardless of one another. It should save the process in a path ./process/{process name}/{date & time}/. The output files and command promt executed log file saved in this path.
+
+3. Create new page name as SKU. This page is consist of data table viewer. Here we able add the records to data base. Each record should viewd in SKU page. Adding the records can be done by uploading the csv file. The csv file should have the columns as per the requirement. In another way we able to add the records manually. Table schema (name, base_sku, sku, link, rating, review_count)
+
+## New Fuctionality
+
+1. Downloading the output files and command promt executed log file saved in this path.
+- In Schedule page. We able to see the history of the process. In each row add a download button. If click on the download button it should download the output files and command promt executed log file saved in this path. In simple words, It should download all the files which is present in that folder.
+
+2. Editing the thread and process.
+- In Thread page. We able to edit the thread. If click on the edit button it should open the edit page. In edit page we able to edit the thread. In simple words, It should open the edit page. In edit page we able to edit the thread. In the same it can can be deletable.
+
+- In Process page. We able to edit the process. If click on the edit button it should open the edit page. In edit page we able to edit the process. In simple words, It should open the edit page. In edit page we able to edit the process. In the same it can can be deletable.

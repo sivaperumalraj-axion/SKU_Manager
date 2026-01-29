@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os
-from db import (init_db, create_thread, get_all_threads, create_process, get_all_processes, 
+from db import (init_db, create_thread, get_all_threads, update_thread, delete_thread, get_thread,
+                create_process, get_all_processes, update_process, delete_process,
                 get_process_details, add_schedule, get_all_schedules, get_history_log,
-                add_sku, get_skus_paginated)
+                get_execution_details, add_sku, get_skus_paginated)
 import csv
 import io
+import zipfile
 from scheduler import start_scheduler
 from data_manager import save_thread_files
 
@@ -23,6 +25,12 @@ def home():
 def list_threads():
     threads = get_all_threads()
     return jsonify(threads=threads)
+
+@app.route('/api/threads/<int:tid>', methods=['GET'])
+def get_single_thread(tid):
+    t = get_thread(tid)
+    if t: return jsonify(t)
+    return jsonify({"error": "Not Found"}), 404
 
 @app.route('/api/threads', methods=['POST'])
 def add_thread():
@@ -48,6 +56,47 @@ def add_thread():
         return jsonify({"message": "Thread created", "id": tid})
     else:
         return jsonify({"error": "Thread name likely exists"}), 409
+
+@app.route('/api/threads/<int:tid>', methods=['PUT'])
+def edit_thread(tid):
+    name = request.form.get('name')
+    t_type = request.form.get('type')
+    
+    script_file = request.files.get('script_file')
+    config_file = request.files.get('config_file')
+    
+    # Get existing to preserve files if not uploaded
+    existing = get_thread(tid)
+    if not existing:
+        return jsonify({"error": "Thread not found"}), 404
+        
+    s_name = existing['script']
+    c_name = existing['config']
+    
+    # Overwrite if new files provided
+    if script_file or config_file:
+        s_new, c_new = save_thread_files(name, script_file, config_file)
+        if script_file: s_name = s_new
+        if config_file: c_name = c_new
+        
+    success = update_thread(tid, name, t_type, s_name, c_name)
+    if success:
+        return jsonify({"message": "Updated"})
+    return jsonify({"error": "Update failed"}), 400
+
+@app.route('/api/threads/<int:tid>', methods=['DELETE'])
+def remove_thread(tid):
+    # Get thread info first to know name
+    t = get_thread(tid)
+    if not t: return jsonify({"error": "Not Found"}), 404
+    
+    success = delete_thread(tid)
+    if success:
+        # Cleanup Files
+        from data_manager import delete_thread_files
+        delete_thread_files(t['name'])
+        return jsonify({"message": "Deleted"})
+    return jsonify({"error": "Could not delete (In use?)"}), 400
 
 # --- Processes API ---
 @app.route('/api/processes', methods=['GET'])
@@ -76,6 +125,33 @@ def add_process():
         return jsonify({"message": "Process created", "id": pid})
     return jsonify({"error": "Creation failed"}), 400
 
+@app.route('/api/processes/<int:pid>', methods=['PUT'])
+def edit_process(pid):
+    data = request.json
+    name = data.get('name')
+    thread_ids = data.get('thread_ids')
+    
+    if not name or not thread_ids:
+        return jsonify({"error": "Missing name or threads"}), 400
+        
+    success = update_process(pid, name, thread_ids)
+    if success:
+        return jsonify({"message": "Updated"})
+    return jsonify({"error": "Update failed"}), 400
+
+@app.route('/api/processes/<int:pid>', methods=['DELETE'])
+def remove_process(pid):
+    # Get info for cleanup
+    p = get_process_details(pid)
+    
+    success = delete_process(pid)
+    if success:
+        if p:
+            from data_manager import delete_process_files
+            delete_process_files(p['name'])
+        return jsonify({"message": "Deleted"})
+    return jsonify({"error": "Delete failed"}), 400
+
 # --- Scheduling API ---
 @app.route('/api/schedules', methods=['GET'])
 def list_schedules():
@@ -103,6 +179,36 @@ def create_schedule():
 def get_history():
     hist = get_history_log()
     return jsonify(history=hist)
+
+@app.route('/api/history/<int:eid>/download', methods=['GET'])
+def download_history(eid):
+    execution = get_execution_details(eid)
+    if not execution:
+        return "Not Found", 404
+        
+    log_path = execution['log']
+    output_dir = execution['output_dir']
+    
+    # Create valid filename
+    zip_filename = f"execution_{eid}_{execution['name'].replace(' ', '_')}.zip"
+    
+    # In-memory zip
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # 1. Add Log
+        if log_path and os.path.exists(log_path):
+            zf.write(log_path, arcname=os.path.basename(log_path))
+            
+        # 2. Add Output Dir Contents
+        if output_dir and os.path.exists(output_dir):
+            for root, dirs, files in os.walk(output_dir):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_path, output_dir)
+                    zf.write(file_path, arcname=f"output/{arcname}")
+    
+    memory_file.seek(0)
+    return send_file(memory_file, download_name=zip_filename, as_attachment=True)
 
 # --- SKU API ---
 @app.route('/api/skus', methods=['GET'])
