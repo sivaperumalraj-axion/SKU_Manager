@@ -102,7 +102,8 @@ class Scheduler:
             
             if not success:
                 all_success = False
-                break # Stop process on failure? Usually yes.
+                # User Requirement: Continue execution even if error
+                # break
         
         final_status = 'Completed' if all_success else 'Failed'
         log_execution_end(exec_id, final_status)

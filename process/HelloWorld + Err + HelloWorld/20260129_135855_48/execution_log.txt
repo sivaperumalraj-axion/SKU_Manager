@@ -1,0 +1,21 @@
+[2026-01-29 13:58:55] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\helloworld\helloworld.py
+[2026-01-29 13:58:55] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\HelloWorld + Err + HelloWorld\20260129_135855_48
+Hello World!
+
+[2026-01-29 13:58:55] FILTERED WITH RETURN CODE: 0
+----------------------------------------
+[2026-01-29 13:58:55] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\error\error.py
+[2026-01-29 13:58:55] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\HelloWorld + Err + HelloWorld\20260129_135855_48
+Traceback (most recent call last):
+  File "C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\error\error.py", line 1, in <module>
+    error
+NameError: name 'error' is not defined. Did you mean: 'OSError'?
+
+[2026-01-29 13:58:55] FILTERED WITH RETURN CODE: 1
+----------------------------------------
+[2026-01-29 13:58:55] STARTING: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\threads\helloworld\helloworld.py
+[2026-01-29 13:58:55] CWD: C:\Users\admin\Documents\work\Shark-Ninja\Scraping\Automation\Scheduler\Python-Script-Runner-main\process\HelloWorld + Err + HelloWorld\20260129_135855_48
+Hello World!
+
+[2026-01-29 13:58:55] FILTERED WITH RETURN CODE: 0
+----------------------------------------
